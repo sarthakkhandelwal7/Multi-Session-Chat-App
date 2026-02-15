@@ -1,8 +1,9 @@
 from src.db import DatabaseAdapter
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import logging
-from typing import AsyncGenerator, Any
+from typing import Any
 from sqlalchemy import insert
+from contextlib import asynccontextmanager
 
 
 class Postgres(DatabaseAdapter):
@@ -50,16 +51,18 @@ class Postgres(DatabaseAdapter):
             await self.async_engine.dispose()
             logging.info("Disconnected from PostgreSQL database")
 
-    async def get_session(self, query_type: str) -> AsyncGenerator[Any, None]:
+    @asynccontextmanager
+    async def get_session(self, query_type: str):
         session = self.async_session_maker()
         try:
             yield session
             await session.commit()
-
         except Exception as e:
             logging.error(f"Error during {query_type} session: {e}")
-            session.rollback()
+            await session.rollback()
             raise e
+        finally:
+            await session.close()
 
     async def execute_query(self, query, params=None):
         async with self.get_session("row query") as session:

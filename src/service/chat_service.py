@@ -1,4 +1,4 @@
-from src.db.db_adapter import DBAdapter
+from src.db.db_adapter import DatabaseAdapter
 from src.core import Settings
 from src.schema import NewChatSessionRequest, NewChatSessionResponse
 from src.db.schema import ChatSession, ChatMessage
@@ -6,7 +6,7 @@ import logging
 
 
 class ChatService:
-    def __init__(self, db: DBAdapter, settings: Settings):
+    def __init__(self, db: DatabaseAdapter, settings: Settings):
         self.db = db
         self.settings = settings
 

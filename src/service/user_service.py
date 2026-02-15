@@ -1,4 +1,4 @@
-from src.db.db_adapter import DBAdapter
+from src.db.db_adapter import DatabaseAdapter
 from src.core import Settings
 from src.db.schema import User
 from sqlalchemy import select, delete, update
@@ -7,7 +7,7 @@ from typing import Optional, List
 
 
 class UserService:
-    def __init__(self, db: DBAdapter, settings: Settings):
+    def __init__(self, db: DatabaseAdapter, settings: Settings):
         self.db = db
         self.settings = settings
 
