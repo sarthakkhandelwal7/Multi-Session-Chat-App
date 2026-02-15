@@ -33,7 +33,9 @@ class User(Base):
 
 class ChatSession(Base):
     __tablename__ = "chat_session"
-    session_id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4())
+    session_id = Column(
+        UUID(as_uuid=True), primary_key=True, server_default=func.uuid_generate_v4()
+    )
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey(f"{settings.active_schema}.user.user_id"),

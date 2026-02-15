@@ -9,6 +9,7 @@ from src.schema import (
     SaveChatMessagesRequest,
 )
 from typing import List
+from uuid import UUID
 
 chat_router = APIRouter(prefix="/chat", tags=["chat", "session"])
 
@@ -24,10 +25,10 @@ async def create_new_session(
 
 @chat_router.get(path="/session/{session_id}", response_model=ChatSessionResponse)
 async def fetch_chat_session(
-    session_id: str, chat_service: ChatService = Depends(get_chat_service)
+    session_id: UUID, chat_service: ChatService = Depends(get_chat_service)
 ) -> ChatSessionResponse:
     """Fetch a specific chat session by ID"""
-    session = await chat_service.fetch_chat_session(session_id)
+    session = await chat_service.fetch_chat_session(str(session_id))
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return ChatSessionResponse(**session)
@@ -35,10 +36,10 @@ async def fetch_chat_session(
 
 @chat_router.get(path="/sessions/{user_id}", response_model=List[ChatSessionResponse])
 async def fetch_all_sessions(
-    user_id: str, chat_service: ChatService = Depends(get_chat_service)
+    user_id: UUID, chat_service: ChatService = Depends(get_chat_service)
 ) -> List[ChatSessionResponse]:
     """Fetch all chat sessions for a user"""
-    sessions = await chat_service.fetch_all_sessions(user_id)
+    sessions = await chat_service.fetch_all_sessions(str(user_id))
     return [ChatSessionResponse(**session) for session in sessions]
 
 

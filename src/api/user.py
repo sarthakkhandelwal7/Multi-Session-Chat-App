@@ -8,6 +8,7 @@ from src.schema import (
     CreateUserResponse,
 )
 from typing import List
+from uuid import UUID
 
 user_router = APIRouter(prefix="/user", tags=["user"])
 
@@ -28,10 +29,10 @@ async def create_user(
 
 @user_router.get(path="/{user_id}", response_model=UserResponse)
 async def get_user(
-    user_id: str, user_service: UserService = Depends(get_user_service)
+    user_id: UUID, user_service: UserService = Depends(get_user_service)
 ) -> UserResponse:
     """Get a specific user by ID"""
-    user = await user_service.get_user_by_id(user_id)
+    user = await user_service.get_user_by_id(str(user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return UserResponse(**user)
@@ -48,18 +49,18 @@ async def get_all_users(
 
 @user_router.put(path="/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: str,
+    user_id: UUID,
     request: UpdateUserRequest,
     user_service: UserService = Depends(get_user_service),
 ) -> UserResponse:
     """Update user information"""
     # Check if user exists
-    existing_user = await user_service.get_user_by_id(user_id)
+    existing_user = await user_service.get_user_by_id(str(user_id))
     if not existing_user:
         raise HTTPException(status_code=404, detail="User not found")
 
     updated_user = await user_service.update_user(
-        user_id=user_id,
+        user_id=str(user_id),
         first_name=request.first_name,
         last_name=request.last_name,
         email=request.email,
@@ -69,13 +70,13 @@ async def update_user(
 
 @user_router.delete(path="/{user_id}")
 async def delete_user(
-    user_id: str, user_service: UserService = Depends(get_user_service)
+    user_id: UUID, user_service: UserService = Depends(get_user_service)
 ):
     """Delete a user"""
     # Check if user exists
-    user = await user_service.get_user_by_id(user_id)
+    user = await user_service.get_user_by_id(str(user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    await user_service.delete_user(user_id)
+    await user_service.delete_user(str(user_id))
     return {"message": "User deleted successfully"}

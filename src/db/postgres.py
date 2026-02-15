@@ -4,6 +4,7 @@ import logging
 from typing import Any
 from sqlalchemy import insert
 from contextlib import asynccontextmanager
+from uuid import UUID
 
 
 class Postgres(DatabaseAdapter):
@@ -70,7 +71,25 @@ class Postgres(DatabaseAdapter):
 
             # Use mappings() to get RowMapping objects, then convert to plain dicts
             mapped_rows = result.mappings().all()
-            return [dict(row) for row in mapped_rows]
+            converted_rows = []
+            for row in mapped_rows:
+                row_dict = dict(row)
+                # Check if any value is a SQLAlchemy ORM object and extract its attributes
+                for key, value in row_dict.items():
+                    if hasattr(value, '__mapper__'):  # It's a SQLAlchemy ORM object
+                        # Convert ORM object to dict by extracting column values
+                        orm_dict = {}
+                        for col in value.__mapper__.columns:
+                            col_value = getattr(value, col.name)
+                            # Convert UUID objects to strings
+                            if isinstance(col_value, UUID):
+                                orm_dict[col.name] = str(col_value)
+                            else:
+                                orm_dict[col.name] = col_value
+                        row_dict = orm_dict
+                        break
+                converted_rows.append(row_dict)
+            return converted_rows
 
     async def execute_count_query(self, query):
         async with self.get_session("count query") as session:
