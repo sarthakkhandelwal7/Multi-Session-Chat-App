@@ -6,10 +6,12 @@ from src.core.settings import Settings
 import logging
 from datetime import datetime, timezone
 from src.api import chat_router
+from src.service import ChatService
 
 class DBUtilsAppState(State):
     postgres: Postgres
     settings: Settings
+    chat_service: ChatService
     db: DatabaseAdapter
 
 settings = Settings()
@@ -19,6 +21,8 @@ async def lifespan(app: FastAPI):
     logging.info("Initializing application with settings: %s", settings)
     app.state = DBUtilsAppState()
     app.state.settings = settings
+    app.state.chat_service = ChatService()
+
 
     async with Postgres(settings) as pg:
         logging.info("Connecting to Postgres")

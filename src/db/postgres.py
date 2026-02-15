@@ -2,6 +2,7 @@ from src.db import DatabaseAdapter
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import logging
 from typing import AsyncGenerator, Any
+from sqlalchemy import insert
 
 
 class Postgres(DatabaseAdapter):
@@ -65,3 +66,13 @@ class Postgres(DatabaseAdapter):
     async def execute_count_query(self, query):
         async with self.get_session("count query") as session:
             return await session.scalar(query)
+
+    async def insert_rows(
+        self, table_model: Any, query_type: str, rows: list[Any], returning: list[Any]
+    ):
+        async with self.db.get_session(query_type) as session:
+            stmt = insert(table_model).returning(*returning)
+            result = await session.execute(stmt)
+            return result.mappings().all()
+    
+             
