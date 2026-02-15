@@ -20,6 +20,11 @@ class Postgres(DatabaseAdapter):
         await self.disconnect()
 
     async def connect(self):
+        # Add search_path to use the active schema (test)
+        connect_args = {
+            "server_settings": {"search_path": f"{self.settings.active_schema}"}
+        }
+
         self.async_engine = create_async_engine(
             self.POSTGRES_URL,
             pool_size=100,
@@ -27,6 +32,7 @@ class Postgres(DatabaseAdapter):
             pool_pre_ping=True,
             pool_recycle=3600,
             echo=False,
+            connect_args=connect_args,
         )
 
         self.async_session_maker = async_sessionmaker(
@@ -70,9 +76,7 @@ class Postgres(DatabaseAdapter):
     async def insert_rows(
         self, table_model: Any, query_type: str, rows: list[Any], returning: list[Any]
     ):
-        async with self.db.get_session(query_type) as session:
-            stmt = insert(table_model).returning(*returning)
+        async with self.get_session(query_type) as session:
+            stmt = insert(table_model).values(rows).returning(*returning)
             result = await session.execute(stmt)
-            return result.mappings().all()
-    
-             
+            return [dict(row) for row in result.mappings().all()]
